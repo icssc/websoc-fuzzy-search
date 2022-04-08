@@ -117,6 +117,7 @@ function parseAndWriteData(d) {
         }
         parsedData.objects[key] = {
             type: 'COURSE',
+            name: value.title,
             department: value.department,
             number: value.number,
         };
