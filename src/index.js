@@ -31,7 +31,11 @@ function search(query, numResults = 10) {
     );
     if (!Object.keys(keyArrMap).length) {
         if (query.match(/^[a-z]+[0-9]+$/)) {
-            query = query.toUpperCase().replace(/\bCS/, 'COMPSCI').replace(/\bICS/, 'I&CSCI').replace(/\bINF/, 'IN4MATX');
+            query = query
+                .toUpperCase()
+                .replace(/\bCS/, 'COMPSCI')
+                .replace(/\bICS/, 'I&CSCI')
+                .replace(/\bINF/, 'IN4MATX');
             for (const key of Object.keys(index.objects).filter((x) => x.includes(query))) {
                 if (Object.keys(response).length === numResults) return response;
                 response[key] = index.objects[key];
@@ -44,6 +48,15 @@ function search(query, numResults = 10) {
                 obj[val] = index.objects[val];
                 return obj;
             }, {});
+            for (const k of keyArrMap[key]) {
+                if (Object.keys(response).length === numResults) return response;
+                if (index.objects[k].type === 'DEPARTMENT') {
+                    for (const course of Object.values(index.objects).filter((x) => x.department === k)) {
+                        if (Object.keys(response).length === numResults) return response;
+                        response[`${course.department}${course.number}`] = course;
+                    }
+                }
+            }
             delete keyArrMap[key];
             break;
         }

@@ -1,6 +1,6 @@
 {
   "name": "websoc-fuzzy-search",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "description": "Fuzzy search proof of concept using WebSOC data",
   "main": "src/index.js",
