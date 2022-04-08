@@ -11,5 +11,8 @@
   "license": "MIT",
   "dependencies": {
     "node-fetch": "^3.2.3"
+  },
+  "devDependencies": {
+    "prettier": "^2.6.2"
   }
 }
