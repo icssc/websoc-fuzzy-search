@@ -17,6 +17,14 @@ function search(query, numResults = 10) {
     if (query.length < 2) {
         throw new Error('Query must be at least two characters long.');
     }
+    let response = {};
+    if (query.match(/^[a-z]+[0-9]+$/)) {
+        query = query.toUpperCase().replace(/\bCS/, 'COMPSCI').replace(/\bICS/, 'I&CSCI').replace(/\bINF/, 'IN4MATX');
+        for (const key of Object.keys(index.objects).filter((x) => x.includes(query))) {
+            if (Object.keys(response).length === numResults) return response;
+            response[key] = index.objects[key];
+        }
+    }
     const keyArrMap = JSON.parse(
         JSON.stringify(
             Object.keys(index.keywords)
@@ -28,7 +36,6 @@ function search(query, numResults = 10) {
                 }, {})
         )
     );
-    let response = {};
     if (!Object.keys(keyArrMap).length) return response;
     for (const key of Object.keys(JSON.parse(JSON.stringify(keyArrMap)))) {
         if (key === query) {
