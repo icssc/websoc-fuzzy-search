@@ -1,6 +1,6 @@
 {
   "name": "websoc-fuzzy-search",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Fuzzy search proof of concept using WebSOC data",
   "main": "src/index.js",
@@ -14,5 +14,15 @@
   },
   "devDependencies": {
     "prettier": "^2.6.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/icssc/websoc-fuzzy-search.git"
+  },
+  "keywords": [],
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/icssc/websoc-fuzzy-search/issues"
+  },
+  "homepage": "https://github.com/icssc/websoc-fuzzy-search#readme"
 }
