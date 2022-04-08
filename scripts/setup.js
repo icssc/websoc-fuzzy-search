@@ -1,11 +1,11 @@
-// TODO: Actually filter out all of the special characters and determiners, prepositions, conjunctions, etc.
-// TODO: Singularize keywords (currently 'science' and 'sciences' are two separate keywords)
-
+// imports
 const fs = require('fs');
 const os = require('os');
 // hack from node-fetch documentation so we can still use 3.x
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const pluralize = require('pluralize');
 
+// input-output configuration
 const localPrefix = 'cache/';
 const remotePrefix = 'https://raw.githubusercontent.com/icssc/peterportal-public-api/master/cache/';
 const files = {
@@ -14,13 +14,32 @@ const files = {
 };
 const outputFile = 'index.json';
 
-// convert titles etc. to lowercase, strip connectives/prepositions, and filter out empty strings
+// Roman numeral map
+// Stops at 8 because that's the highest Roman numeral encountered in the cache (as of 2022-04-08)
+const romans = {
+    i: '1',
+    ii: '2',
+    iii: '3',
+    iv: '4',
+    v: '5',
+    vi: '6',
+    vii: '7',
+    viii: '8',
+};
+
+// words to filter out
+const toFilter = ['', 'a', 'o', 'an', 'at', 'in', 'it', 'of', 'on', 'to', 'and', 'for', 'the'];
+
+// convert titles to keywords
 function keywordize(s) {
     return s
         .toLowerCase()
-        .replaceAll(/\band\b|\bof\b|[&/-]/g, ' ')
+        .replaceAll('u.s.', 'us')
+        .replaceAll(/[&'(),\-/:]/g, ' ')
         .split(' ')
-        .filter((x) => x);
+        .map((x) => (Object.keys(romans).includes(x) ? romans[x] : x))
+        .map((x) => (x === 'us' || x === 'we' ? x : pluralize(x, 1)))
+        .filter((x) => !toFilter.includes(x));
 }
 
 // convert proper names to lowercase, strip dashes so they can be split, and filter out middle initials
@@ -29,7 +48,7 @@ function keywordizeName(s) {
         .toLowerCase()
         .replace('-', ' ')
         .split(' ')
-        .filter((name) => name.length > 1);
+        .filter((name) => name.length > 1 && !name.includes('.'));
 }
 
 // add object to set if keyword exists, create new set if not
@@ -37,8 +56,50 @@ function associate(d, k, o) {
     Object.keys(d).includes(k) ? d[k].add(o) : (d[k] = new Set([o]));
 }
 
+// compares two strings in 'lexiconumeric' order
+// if it is not possible, i.e. the two strings do not have a substring such that the remainder can be parsed as an
+// integer, then the comparation falls back to lexicographic ordering
+function cmpLexnum(a, b) {
+    let s = '';
+    for (const i in a) {
+        if (a[i] !== b[i] || !isNaN(parseInt(a[i]))) break;
+        s += a[i];
+    }
+    let x = parseInt(a.replace(s, ''));
+    let y = parseInt(b.replace(s, ''));
+    return isNaN(x) || isNaN(y) ? (a === b ? 0 : a < b ? -1 : 1) : x === y ? 0 : x < y ? -1 : 1;
+}
+
+// compare whether two values are a certain type given a comparation function
+// if both are that type, compare both lexicographically or with another provided comparation function
+// if one is that type, return the side which is
+// if neither are that type, return null so we can null-coalesce
+function cmpType(a, b, cmp) {
+    switch (cmp(a) << 1 | cmp(b)) {
+        case 0:
+            return null;
+        case 1:
+            return 1;
+        case 2:
+            return -1;
+        case 3:
+            return cmpLexnum(a, b);
+    }
+}
+
+// compare two different keys, in GE->department->instructor->course order with lexicographical order within hierarchies
+function cmpKey(a, b) {
+    return (
+        cmpType(a, b, (x) => x.startsWith('GE-')) ??
+        cmpType(a, b, (x) => (x.search(/[0-9]/) === -1 && x.search(',') === -1 ? 1 : 0)) ??
+        cmpType(a, b, (x) => (x.search(',') === -1 ? 0 : 1)) ??
+        cmpLexnum(a, b)
+    );
+}
+
 // parse the data into the format we want, and write it to the output
 function parseAndWriteData(d) {
+    console.log('Parsing data...');
     // GE categories
     let parsedData = {
         keywords: {},
@@ -138,15 +199,19 @@ function parseAndWriteData(d) {
     }
 
     for (const [key, value] of Object.entries(parsedData.keywords)) {
-        parsedData.keywords[key] = [...value];
+        // requires a stable sort before sorting into the desired order
+        parsedData.keywords[key] = [...value].sort().sort(cmpKey);
     }
+    console.log('Writing parsed data...');
     fs.writeFileSync(`${localPrefix}${outputFile}`, JSON.stringify(parsedData));
     console.log(`Wrote index to file ${outputFile}`);
+    console.timeEnd('Index built in');
     process.exit(0);
 }
 
 // fetch the latest cached data from remote if necessary
 async function verifyFiles() {
+    console.time('Index built in');
     try {
         fs.mkdirSync(localPrefix);
     } catch (e) {
