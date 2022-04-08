@@ -76,7 +76,7 @@ function cmpLexnum(a, b) {
 // if one is that type, return the side which is
 // if neither are that type, return null so we can null-coalesce
 function cmpType(a, b, cmp) {
-    switch (cmp(a) << 1 | cmp(b)) {
+    switch ((cmp(a) << 1) | cmp(b)) {
         case 0:
             return null;
         case 1:
@@ -158,7 +158,12 @@ function parseAndWriteData(d) {
     };
 
     for (const [key, value] of Object.entries(parsedData.objects)) {
-        for (const keyword of [...keywordize(key), ...keywordize(value.name)]) {
+        for (const keyword of [
+            key.toLowerCase(),
+            key.toLowerCase().replace('-', ''),
+            ...keywordize(key),
+            ...keywordize(value.name),
+        ]) {
             associate(parsedData.keywords, keyword, key);
         }
     }
@@ -221,7 +226,7 @@ async function verifyFiles() {
     }
     let cachedData = {};
     for (const [dataType, fileName] of Object.entries(files)) {
-        const fqPath = path.join(localPrefix, fileName)
+        const fqPath = path.join(localPrefix, fileName);
         try {
             cachedData[dataType] = JSON.parse(fs.readFileSync(`${fqPath}`).toString());
             console.log(`${fqPath} is a valid JSON file, reading into memory and skipping`);
