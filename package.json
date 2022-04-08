@@ -1,6 +1,6 @@
 {
   "name": "websoc-fuzzy-search",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "private": true,
   "description": "Fuzzy search proof of concept using WebSOC data",
   "main": "src/index.js",
@@ -11,7 +11,8 @@
   "license": "MIT",
   "dependencies": {
     "node-fetch": "^3.2.3",
-    "pluralize": "^8.0.0"
+    "pluralize": "^8.0.0",
+    "prompt-sync": "^4.2.0"
   },
   "devDependencies": {
     "prettier": "^2.6.2"
