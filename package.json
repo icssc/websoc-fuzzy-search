@@ -8,5 +8,8 @@
     "driver": "node scripts/driver.js",
     "setup": "node scripts/setup.js"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^3.2.3"
+  }
 }
