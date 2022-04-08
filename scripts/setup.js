@@ -101,23 +101,20 @@ function parseAndWriteData(d) {
         }
     }
 
-    // departments
-    for (const value of Object.values(d.courses)) {
-        if (Object.keys(parsedData.objects).includes(value.department)) continue;
-        parsedData.objects[value.department] = {
-            type: 'DEPARTMENT',
-            name: value.department_name,
-        };
-        for (const keyword of [
-            ...value.department_alias.map((x) => x.toLowerCase()),
-            ...keywordize(value.department_name),
-        ]) {
-            associate(parsedData.keywords, keyword, value.department);
-        }
-    }
-
-    // courses
+    // departments and courses
     for (const [key, value] of Object.entries(d.courses)) {
+        if (!Object.keys(parsedData.objects).includes(value.department)) {
+            parsedData.objects[value.department] = {
+                type: 'DEPARTMENT',
+                name: value.department_name,
+            };
+            for (const keyword of [
+                ...value.department_alias.map((x) => x.toLowerCase()),
+                ...keywordize(value.department_name),
+            ]) {
+                associate(parsedData.keywords, keyword, value.department);
+            }
+        }
         parsedData.objects[key] = {
             type: 'COURSE',
             department: value.department,
