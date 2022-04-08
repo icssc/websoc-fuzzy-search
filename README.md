@@ -37,4 +37,10 @@ The query to fuzzy-search on. Note that it must be at least 2 characters in leng
 The maximum number of results to return—defaults to 10.
 
 ### `Response` object
-The `Response` object is guaranteed to contain two fields: `type`, which will always be one of `['GE_CATEGORY', 'DEPARTMENT', 'COURSE', 'INSTRUCTOR']`, and `name`, the descriptive name ascribed to that object. It may additionally contain any number of other fields.
+The `Response` object is guaranteed to contain exactly three fields.
+
+| `Field` | `Type` | `Notes` |
+| :-: | :-: | :-: |
+| `type` | `string` | one of `['GE_CATEGORY', 'DEPARTMENT', 'COURSE', 'INSTRUCTOR']` |
+| `name` | `string` | |
+| `metadata` | `Object` | may contain any number of other fields

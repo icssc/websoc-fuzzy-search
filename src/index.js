@@ -51,9 +51,9 @@ function search(query, numResults = 10) {
             for (const k of keyArrMap[key]) {
                 if (Object.keys(response).length === numResults) return response;
                 if (index.objects[k].type === 'DEPARTMENT') {
-                    for (const course of Object.values(index.objects).filter((x) => x.department === k)) {
+                    for (const course of Object.values(index.objects).filter((x) => x.metadata.department === k)) {
                         if (Object.keys(response).length === numResults) return response;
-                        response[`${course.department.replace(' ', '')}${course.number}`] = course;
+                        response[`${course.metadata.department.replace(' ', '')}${course.metadata.number}`] = course;
                     }
                 }
             }

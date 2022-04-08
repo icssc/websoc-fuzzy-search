@@ -158,6 +158,7 @@ function parseAndWriteData(d) {
     };
 
     for (const [key, value] of Object.entries(parsedData.objects)) {
+        parsedData.objects[key].metadata = {};
         for (const keyword of [
             key.toLowerCase(),
             key.toLowerCase().replace('-', ''),
@@ -174,6 +175,7 @@ function parseAndWriteData(d) {
             parsedData.objects[value.department] = {
                 type: 'DEPARTMENT',
                 name: value.department_name,
+                metadata: {},
             };
             for (const keyword of [
                 ...value.department_alias.map((x) => x.toLowerCase()),
@@ -185,8 +187,10 @@ function parseAndWriteData(d) {
         parsedData.objects[key] = {
             type: 'COURSE',
             name: value.title,
-            department: value.department,
-            number: value.number,
+            metadata: {
+                department: value.department,
+                number: value.number,
+            },
         };
         for (const keyword of keywordize(value.title)) {
             associate(parsedData.keywords, keyword, key);
@@ -198,6 +202,7 @@ function parseAndWriteData(d) {
         parsedData.objects[instructor.shortened_name] = {
             type: 'INSTRUCTOR',
             name: instructor.name,
+            metadata: {},
         };
         for (const keyword of keywordizeName(instructor.name)) {
             associate(parsedData.keywords, keyword, instructor.shortened_name);
