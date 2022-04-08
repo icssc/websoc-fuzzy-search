@@ -158,7 +158,7 @@ function parseAndWriteData(d) {
     };
 
     for (const [key, value] of Object.entries(parsedData.objects)) {
-        for (const keyword of keywordize(value.name)) {
+        for (const keyword of [...keywordize(key), ...keywordize(value.name)]) {
             associate(parsedData.keywords, keyword, key);
         }
     }
@@ -191,7 +191,7 @@ function parseAndWriteData(d) {
     // instructors
     for (const instructor of Object.values(d.instructors)) {
         parsedData.objects[instructor.shortened_name] = {
-            type: 'PROFESSOR',
+            type: 'INSTRUCTOR',
             name: instructor.name,
         };
         for (const keyword of keywordizeName(instructor.name)) {
