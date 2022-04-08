@@ -131,4 +131,9 @@ dist
 
 # cached WebSOC data from PeterPortal API
 cache/
+
+# JetBrains IDE stuff
 .idea/
+
+# generated index
+src/index.json

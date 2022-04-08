@@ -1,18 +1,19 @@
 // imports
 const fs = require('fs');
 const os = require('os');
+const path = require('path');
 // hack from node-fetch documentation so we can still use 3.x
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const pluralize = require('pluralize');
 
 // input-output configuration
-const localPrefix = 'cache/';
+const localPrefix = path.normalize(`${module.path}/../cache/`);
 const remotePrefix = 'https://raw.githubusercontent.com/icssc/peterportal-public-api/master/cache/';
 const files = {
     courses: 'parsed_courses_cache.json',
     instructors: 'parsed_professor_cache.json',
 };
-const outputFile = 'index.json';
+const outputFile = path.normalize(`${module.path}/../src/index.json`);
 
 // Roman numeral map
 // Stops at 8 because that's the highest Roman numeral encountered in the cache (as of 2022-04-08)
@@ -203,7 +204,7 @@ function parseAndWriteData(d) {
         parsedData.keywords[key] = [...value].sort().sort(cmpKey);
     }
     console.log('Writing parsed data...');
-    fs.writeFileSync(`${localPrefix}${outputFile}`, JSON.stringify(parsedData));
+    fs.writeFileSync(`${outputFile}`, JSON.stringify(parsedData));
     console.log(`Wrote index to file ${outputFile}`);
     console.timeEnd('Index built in');
     process.exit(0);
@@ -220,17 +221,18 @@ async function verifyFiles() {
     }
     let cachedData = {};
     for (const [dataType, fileName] of Object.entries(files)) {
+        const fqPath = path.join(localPrefix, fileName)
         try {
-            cachedData[dataType] = JSON.parse(fs.readFileSync(`${localPrefix}${fileName}`).toString());
-            console.log(`${fileName} is a valid JSON file, reading into memory and skipping`);
+            cachedData[dataType] = JSON.parse(fs.readFileSync(`${fqPath}`).toString());
+            console.log(`${fqPath} is a valid JSON file, reading into memory and skipping`);
         } catch (e) {
             if (e instanceof SyntaxError || (e.errno && Math.abs(e.errno) === os.constants.errno.ENOENT)) {
-                console.log(`Malformed or empty JSON file ${fileName} detected locally, downloading from remote`);
+                console.log(`Malformed or empty JSON file ${fqPath} detected locally, downloading from remote`);
                 const response = await fetch(`${remotePrefix}${fileName}`);
                 const data = await response.json();
                 cachedData[dataType] = data;
-                fs.writeFileSync(`${localPrefix}${fileName}`, JSON.stringify(data));
-                console.log(`File ${fileName} written successfully`);
+                fs.writeFileSync(`${fqPath}`, JSON.stringify(data));
+                console.log(`File ${fqPath} written successfully`);
             } else {
                 throw e;
             }
