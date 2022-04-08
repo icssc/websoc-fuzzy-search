@@ -131,3 +131,4 @@ dist
 
 # cached WebSOC data from PeterPortal API
 cache/
+.idea/
