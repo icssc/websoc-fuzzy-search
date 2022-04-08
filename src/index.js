@@ -53,7 +53,7 @@ function search(query, numResults = 10) {
                 if (index.objects[k].type === 'DEPARTMENT') {
                     for (const course of Object.values(index.objects).filter((x) => x.department === k)) {
                         if (Object.keys(response).length === numResults) return response;
-                        response[`${course.department}${course.number}`] = course;
+                        response[`${course.department.replace(' ', '')}${course.number}`] = course;
                     }
                 }
             }
