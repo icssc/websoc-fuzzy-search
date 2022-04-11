@@ -111,7 +111,7 @@ function search(query, numResults = 10) {
             response.push(...Object.keys(index.objects).filter((x) => index.objects[x].metadata.department === key));
         }
     }
-    return expandResponse(response, numResults);
+    return expandResponse([...new Set([...response])], numResults);
 }
 
 export { init, search };
