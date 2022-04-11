@@ -7,13 +7,13 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const pluralize = require('pluralize');
 
 // input-output configuration
-const localPrefix = path.normalize(`${module.path}/../cache/`);
+const localPrefix = path.normalize(`${module.path}/cache/`);
 const remotePrefix = 'https://raw.githubusercontent.com/icssc/peterportal-public-api/master/cache/';
 const files = {
     courses: 'parsed_courses_cache.json',
     instructors: 'parsed_professor_cache.json',
 };
-const outputFile = path.normalize(`${module.path}/../src/index.json`);
+const outputFile = path.normalize(`${module.path}/../index.json`);
 
 // Roman numeral map
 // Stops at 8 because that's the highest Roman numeral encountered in the cache (as of 2022-04-08)

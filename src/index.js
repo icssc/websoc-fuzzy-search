@@ -1,9 +1,9 @@
 // imports
-const fs = require('fs');
+import fetch from 'node-fetch';
 
 // constants
 // path to the index
-const pathToIndex = `${module.path}/index.json`;
+const indexURL = 'https://raw.githubusercontent.com/icssc/websoc-fuzzy-search/main/index.json';
 // mapping of types to numbers for compareFn
 const types = {
     GE_CATEGORY: 4,
@@ -12,7 +12,7 @@ const types = {
     INSTRUCTOR: 1,
 };
 
-let index = {};
+let index;
 let initialized = false;
 
 // comparation function for sorting responses
@@ -48,8 +48,9 @@ function expandResponse(response, numResults) {
 }
 
 // load the index into memory
-function init() {
-    index = JSON.parse(fs.readFileSync(pathToIndex).toString());
+async function init() {
+    const response = await fetch(indexURL);
+    index = await response.json();
     Object.freeze(index);
     initialized = true;
 }
@@ -113,4 +114,4 @@ function search(query, numResults = 10) {
     return expandResponse(response, numResults);
 }
 
-module.exports = { init, search };
+export { init, search };

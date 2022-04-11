@@ -1,0 +1,20 @@
+{
+  "name": "wfs-scripts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scripts for websoc-fuzzy-search",
+  "scripts": {
+    "driver": "node driver.js",
+    "setup": "node setup.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^3.2.3",
+    "pluralize": "^8.0.0",
+    "prompt-sync": "^4.2.0"
+  },
+  "devDependencies": {
+    "prettier": "^2.6.2"
+  },
+  "type": "module"
+}
