@@ -91,7 +91,7 @@ function search(query, numResults = 10) {
                 // prioritize exact department matches
                 if (
                     index.objects[key].type === 'DEPARTMENT' &&
-                    (query.toUpperCase() === key || index.aliases?.[query] === key)
+                    (query.toUpperCase() === key || (index.aliases[query] && index.aliases[query] === key))
                 ) {
                     response.push(
                         ...Object.keys(index.objects).filter((x) => index.objects[x].metadata.department === key)
