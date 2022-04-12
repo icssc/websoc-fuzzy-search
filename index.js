@@ -1,9 +1,5 @@
-// configuration
-// path to the index
-const indexURL = 'https://raw.githubusercontent.com/icssc/websoc-fuzzy-search/main/index.json';
-
 // imports
-import fetch from 'cross-fetch';
+import * as index from './index.json';
 
 // constants
 // mapping of types to numbers for compare
@@ -13,9 +9,6 @@ const types = {
     COURSE: 2,
     INSTRUCTOR: 1,
 };
-
-let index;
-let initialized = false;
 
 // comparation function for sorting responses
 function compare(a, b) {
@@ -102,20 +95,8 @@ function searchSingle(keyword, numResults) {
     return [...new Set([...response])];
 }
 
-// load the index into memory
-async function init() {
-    const response = await fetch(indexURL);
-    index = await response.json();
-    Object.freeze(index);
-    initialized = true;
-}
-
 // perform a search
 function search(query, numResults = 10, mask = []) {
-    // basic sanity checking exceptions
-    if (!initialized) {
-        throw new Error('Index has not been initialized. Please run init() before executing a query.');
-    }
     query = query.toLowerCase();
     // match course code with space, remove the space if detected
     if (query.match(/([a-z]+) ([0-9]+[a-z]*)/)) {
@@ -139,4 +120,4 @@ function search(query, numResults = 10, mask = []) {
     );
 }
 
-export { init, search };
+export default search;
