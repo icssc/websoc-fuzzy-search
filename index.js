@@ -1,10 +1,10 @@
 // imports
-import fetch from 'node-fetch';
+import fetch from 'cross-fetch';
 
 // constants
 // path to the index
 const indexURL = 'https://raw.githubusercontent.com/icssc/websoc-fuzzy-search/main/index.json';
-// mapping of types to numbers for compareFn
+// mapping of types to numbers for compare
 const types = {
     GE_CATEGORY: 4,
     DEPARTMENT: 3,
@@ -72,7 +72,7 @@ function search(query, numResults = 10) {
         for (const [alias, department] of Object.entries(index.aliases)) {
             query = query.replace(new RegExp(`^${alias}`), department.toString());
         }
-        response.push(...Object.keys(index.objects).filter((x) => x.includes(query.toUpperCase())));
+        response.push(...Object.keys(index.objects).filter((x) => x.includes(query.replace(' ', '').toUpperCase())));
     }
     // match all keywords
     const keyArrMap = Object.keys(index.keywords)
