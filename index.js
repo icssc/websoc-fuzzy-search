@@ -33,7 +33,7 @@ function compare(a, b) {
     let y = parseInt(b);
     // if both course numbers consist only of numbers, compare their numeric values directly
     // otherwise fall back to lexicographical comparison
-    return a === x.toString() && b === y.toString() ? (x === y ? 0 : x < y ? -1 : 1) : a === b ? 0 : a < b ? -1 : 1;
+    return a === x.toString() || b === y.toString() ? (x === y ? 0 : x < y ? -1 : 1) : a === b ? 0 : a < b ? -1 : 1;
 }
 
 // given an array of keys, return a mapping of those keys to their results in index.objects
