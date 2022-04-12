@@ -23,12 +23,12 @@ The `Response` object represents a single object matched by the fuzzy search pro
 
 | Field | Type | Notes |
 | :-: | :-: | :-: |
-| `type` | `Type` | |
+| `type` | `TypeLiteral` | |
 | `name` | `string` | |
 | `metadata` | `Object` | May contain any number of other fields
 
 ### `search(query, numResults = 10, mask = []) : Map<string, Response>`
-Performs a fuzzy-search query and returns at most the given number of results.
+Performs a fuzzy-search query and returns at most the given number of results, ignoring those which match the type(s) given.
 
 Returns an `Object` which contains a mapping of unique string identifiers to `Response` objects, the details of which are listed above.
 #### `query: string`
