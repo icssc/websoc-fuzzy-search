@@ -27,11 +27,7 @@ The `Response` object represents a single object matched by the fuzzy search pro
 | `name` | `string` | |
 | `metadata` | `Object` | May contain any number of other fields
 
-### `search.init() : void`
-
-Loads the contents of the index into memory. Must be run before any calls are made to `search.search`.
-
-### `search.search(query, numResults = 10, mask = []) : Map<string, Response>`
+### `search(query, numResults = 10, mask = []) : Map<string, Response>`
 Performs a fuzzy-search query and returns at most the given number of results.
 
 Returns an `Object` which contains a mapping of unique string identifiers to `Response` objects, the details of which are listed above.
