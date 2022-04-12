@@ -1,25 +1,24 @@
 {
   "name": "websoc-fuzzy-search",
-  "version": "0.5.0",
-  "private": true,
+  "version": "0.6.0",
   "description": "Fuzzy search proof of concept using WebSOC data",
-  "main": "index.js",
-  "license": "MIT",
-  "devDependencies": {
-    "prettier": "^2.6.2"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/icssc/websoc-fuzzy-search.git"
-  },
-  "keywords": [],
-  "author": "icssc",
+  "homepage": "https://github.com/icssc/websoc-fuzzy-search#readme",
   "bugs": {
     "url": "https://github.com/icssc/websoc-fuzzy-search/issues"
   },
-  "homepage": "https://github.com/icssc/websoc-fuzzy-search#readme",
-  "type": "module",
+  "license": "MIT",
+  "author": "icssc.projects",
+  "files": [],
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icssc/websoc-fuzzy-search.git"
+  },
   "dependencies": {
     "cross-fetch": "^3.1.5"
-  }
+  },
+  "devDependencies": {
+    "prettier": "^2.6.2"
+  },
+  "type": "module"
 }
