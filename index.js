@@ -1,9 +1,11 @@
+// configuration
+// path to the index
+const indexURL = 'https://raw.githubusercontent.com/icssc/websoc-fuzzy-search/main/index.json';
+
 // imports
 import fetch from 'cross-fetch';
 
 // constants
-// path to the index
-const indexURL = 'https://raw.githubusercontent.com/icssc/websoc-fuzzy-search/main/index.json';
 // mapping of types to numbers for compare
 const types = {
     GE_CATEGORY: 4,
@@ -37,7 +39,8 @@ function compare(a, b) {
 }
 
 // given an array of keys, return a mapping of those keys to their results in index.objects
-function expandResponse(response, numResults) {
+function expandResponse(response, numResults, mask) {
+    response = mask.length ? response.filter((x) => !mask.includes(index.objects[x].type)) : response;
     return response
         .sort(compare)
         .slice(0, numResults - 1)
@@ -108,7 +111,7 @@ async function init() {
 }
 
 // perform a search
-function search(query, numResults = 10) {
+function search(query, numResults = 10, mask = []) {
     // basic sanity checking exceptions
     if (!initialized) {
         throw new Error('Index has not been initialized. Please run init() before executing a query.');
@@ -124,14 +127,15 @@ function search(query, numResults = 10) {
     }
     // if only one keyword was given, just run a single query
     if (keywords.length === 1) {
-        return expandResponse(searchSingle(query, numResults), numResults);
+        return expandResponse(searchSingle(query, numResults), numResults, mask);
     }
     // take the results of all queries and return their intersection
     return expandResponse(
         keywords
             .map((keyword) => searchSingle(keyword, numResults))
             .reduce((array, response) => array.filter((x) => response.includes(x))),
-        numResults
+        numResults,
+        mask
     );
 }
 
