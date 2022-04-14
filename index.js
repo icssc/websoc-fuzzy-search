@@ -1,5 +1,5 @@
 // imports
-import * as index from './index.json';
+import { default as index } from './index.json';
 
 // constants
 // mapping of types to numbers for compare
@@ -47,8 +47,15 @@ function expandResponse(response, numResults, mask) {
 function searchSingle(keyword, numResults) {
     keyword = keyword.toLowerCase();
     let response = [];
-    // match course codes first if the query contains numbers
-    if (keyword.match(/^[a-z]+[0-9]+[0-9]*$/)) {
+    // match course codes first if the query resembles a course number (with or without the department code)
+    if (keyword.match(/^\d+[a-z]*$/)) {
+        response.push(
+            ...Object.keys(index.objects).filter(
+                (x) =>
+                    index.objects[x].metadata.number && index.objects[x].metadata.number.includes(keyword.toUpperCase())
+            )
+        );
+    } else if (keyword.match(/^[a-z]+\d+[a-z]*$/)) {
         keyword = keyword.replace(' ', '');
         for (const [alias, department] of Object.entries(index.aliases)) {
             keyword = keyword.replace(new RegExp(`^${alias}`), department.toString());
@@ -99,8 +106,8 @@ function searchSingle(keyword, numResults) {
 function search(query, numResults = 10, mask = []) {
     query = query.toLowerCase();
     // match course code with space, remove the space if detected
-    if (query.match(/([a-z]+) ([0-9]+[a-z]*)/)) {
-        query = query.replace(/([a-z]+) ([0-9]+[a-z]*)/, '$1$2');
+    if (query.match(/([a-z]+) (\d+[a-z]*)/)) {
+        query = query.replace(/([a-z]+) (\d+[a-z]*)/, '$1$2');
     }
     const keywords = query.split(' ');
     if (keywords.some((x) => x.length < 2)) {
