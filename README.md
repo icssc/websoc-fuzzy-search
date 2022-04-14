@@ -9,7 +9,7 @@ A proof of concept fuzzy search using cached WebSOC data.
 ## Documentation
 
 ### `TypeLiteral` object
-The `TypeLiteral` object is a string literal that holds one of the four following values. The internal value is used to sort the final response.
+The `TypeLiteral` object represents a type of `Response` object, and is a string literal that holds one of the four following values. The internal value is used to sort the final response.
 | Literal Value | Internal Value
 | :-: | :-: |
 | `GE_CATEGORY` | `4` |
