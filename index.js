@@ -111,7 +111,7 @@ function search(query, numResults = 10, mask = []) {
     }
     const keywords = query.split(' ');
     if (keywords.some((x) => x.length < 2)) {
-        throw new Error('Each keyword of the query must be at least two characters long.');
+        throw new TypeError('Each keyword of the query must be at least two characters long.');
     }
     // if only one keyword was given, just run a single query
     if (keywords.length === 1) {
