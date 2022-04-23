@@ -10,25 +10,26 @@ const types = {
     INSTRUCTOR: 1,
 };
 
+// regex to tokenize a course number into its prefix/number/suffix
+const tokenizeCourseNum = /(?<prefix>[A-Z]?)(?<number>\d{1,3})(?<suffix>[A-Z]{0,4})/;
+
 // comparation function for sorting responses
 function compare(a, b) {
     // compare object types in the order GE->department->course->instructor
     let aType = index.objects[a].type;
     let bType = index.objects[b].type;
     if (aType !== bType) return Math.sign(types[bType] - types[aType]);
-    // find the largest common initial substring of the two keys and strip them
-    let s = '';
-    for (const i in a) {
-        if (a[i] !== b[i] || !isNaN(parseInt(a[i]))) break;
-        s += a[i];
+    // special ordering for course numbers that checks in the order number->prefix->suffix
+    if (aType === 'COURSE') {
+        const [preA, numA, sufA] = Object.values(index.objects[a].metadata.number.match(tokenizeCourseNum).groups);
+        const [preB, numB, sufB] = Object.values(index.objects[b].metadata.number.match(tokenizeCourseNum).groups);
+        if (numA === numB) {
+            return preA === preB ? lexOrd(sufA, sufB) : lexOrd(preA, preB);
+        }
+        return lexOrd(parseInt(numA), parseInt(numB))
     }
-    a = a.replace(s, '');
-    b = b.replace(s, '');
-    let x = parseInt(a);
-    let y = parseInt(b);
-    // if both course numbers consist only of numbers, compare their numeric values directly
-    // otherwise fall back to lexicographical comparison
-    return a === x.toString() || b === y.toString() ? (x === y ? 0 : x < y ? -1 : 1) : a === b ? 0 : a < b ? -1 : 1;
+    // standard lexicographical ordering for everything else
+    return lexOrd(a, b)
 }
 
 // given an array of keys, return a mapping of those keys to their results in index.objects
@@ -41,6 +42,11 @@ function expandResponse(response, numResults, mask) {
             obj[key] = index.objects[key];
             return obj;
         }, {});
+}
+
+// shorthand for the lexicographical ordering ternary
+function lexOrd(a, b) {
+    return a === b ? 0 : a < b ? -1 : 1;
 }
 
 // search on a single keyword
@@ -103,7 +109,7 @@ function searchSingle(keyword, numResults) {
 }
 
 // perform a search
-function search(query, numResults = 10, mask = []) {
+export default function search(query, numResults = 10, mask = []) {
     query = query.toLowerCase();
     // match course code with space, remove the space if detected
     if (query.match(/([a-z]+) (\d+[a-z]*)/)) {
@@ -126,5 +132,3 @@ function search(query, numResults = 10, mask = []) {
         mask
     );
 }
-
-export default search;
