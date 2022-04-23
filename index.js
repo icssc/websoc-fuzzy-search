@@ -10,8 +10,11 @@ const types = {
     INSTRUCTOR: 1,
 };
 
-// regex to tokenize a course number into its prefix/number/suffix
-const tokenizeCourseNum = /(?<prefix>[A-Z]?)(?<number>\d{1,3})(?<suffix>[A-Z]{0,4})/;
+// regex to match department and course number with space
+const matchCourseNum = /(?<department>([ &/a-z]{2}4?[ &/a-z]*)?)(?<space> ?)(?<number>[a-z]?\d+[a-z]{0,4})/;
+
+// regex to tokenize a course number into its prefix/numeral/suffix
+const tokenizeCourseNum = /(?<prefix>[A-Z]?)(?<numeral>\d{1,3})(?<suffix>[A-Z]{0,4})/;
 
 // comparation function for sorting responses
 function compare(a, b) {
@@ -19,17 +22,22 @@ function compare(a, b) {
     let aType = index.objects[a].type;
     let bType = index.objects[b].type;
     if (aType !== bType) return Math.sign(types[bType] - types[aType]);
-    // special ordering for course numbers that checks in the order number->prefix->suffix
+    // special ordering for course numbers that checks in the order department->numeral->prefix->suffix
     if (aType === 'COURSE') {
-        const [preA, numA, sufA] = Object.values(index.objects[a].metadata.number.match(tokenizeCourseNum).groups);
-        const [preB, numB, sufB] = Object.values(index.objects[b].metadata.number.match(tokenizeCourseNum).groups);
-        if (numA === numB) {
-            return preA === preB ? lexOrd(sufA, sufB) : lexOrd(preA, preB);
+        const aDept = index.objects[a].metadata.department;
+        const bDept = index.objects[b].metadata.department;
+        if (aDept === bDept) {
+            const [aPre, aNum, aSuf] = Object.values(index.objects[a].metadata.number.match(tokenizeCourseNum).groups);
+            const [bPre, bNum, bSuf] = Object.values(index.objects[b].metadata.number.match(tokenizeCourseNum).groups);
+            if (aNum === bNum) {
+                return aPre === bPre ? lexOrd(aSuf, bSuf) : lexOrd(aPre, bPre);
+            }
+            return lexOrd(parseInt(aNum), parseInt(bNum));
         }
-        return lexOrd(parseInt(numA), parseInt(numB))
+        return lexOrd(aDept, bDept);
     }
     // standard lexicographical ordering for everything else
-    return lexOrd(a, b)
+    return lexOrd(a, b);
 }
 
 // given an array of keys, return a mapping of those keys to their results in index.objects
@@ -49,29 +57,37 @@ function lexOrd(a, b) {
     return a === b ? 0 : a < b ? -1 : 1;
 }
 
-// search on a single keyword
-function searchSingle(keyword, numResults) {
-    keyword = keyword.toLowerCase();
+// search on a single course number, with or without department
+function searchCourseNumber(courseNum) {
     let response = [];
-    // match course codes first if the query resembles a course number (with or without the department code)
-    if (keyword.match(/^\d+[a-z]*$/)) {
+    if (courseNum.match(/^\d+[a-z]*$/)) {
         response.push(
             ...Object.keys(index.objects).filter(
-                (x) =>
-                    index.objects[x].metadata.number && index.objects[x].metadata.number.includes(keyword.toUpperCase())
+                (x) => index.objects[x].metadata.number && index.objects[x].metadata.number.includes(courseNum)
             )
         );
-    } else if (keyword.match(/^[a-z]+\d+[a-z]*$/)) {
-        keyword = keyword.replace(' ', '');
+    } else if (courseNum.match(/^[a-z]+\d+[a-z]*$/)) {
+        courseNum = courseNum.replace(' ', '');
         for (const [alias, department] of Object.entries(index.aliases)) {
-            keyword = keyword.replace(new RegExp(`^${alias}`), department.toString());
+            for (const dept of department) {
+                courseNum = courseNum.replace(new RegExp(`^${alias}`), dept.toString());
+            }
         }
-        response.push(...Object.keys(index.objects).filter((x) => x.includes(keyword.replace(' ', '').toUpperCase())));
+        response.push(
+            ...Object.keys(index.objects).filter((x) => x.includes(courseNum.replace(' ', '').toUpperCase()))
+        );
     }
+    return [...new Set(response)];
+}
+
+// search on a single keyword
+function searchKeyword(keyword, numResults) {
+    keyword = keyword.toLowerCase();
+    let response = [];
     // match all keywords
     const keyArrMap = Object.keys(index.keywords)
         .filter((x) => x.includes(keyword))
-        .sort((a, b) => (a.length === b.length ? (a === b ? 0 : a < b ? -1 : 1) : a.length < b.length ? -1 : 1))
+        .sort((a, b) => (a.length === b.length ? lexOrd(a, b) : lexOrd(a.length, b.length)))
         .reduce((obj, val) => {
             obj[val] = index.keywords[val];
             return obj;
@@ -85,7 +101,7 @@ function searchSingle(keyword, numResults) {
                 // prioritize exact department matches
                 if (
                     index.objects[key].type === 'DEPARTMENT' &&
-                    (keyword.toUpperCase() === key || (index.aliases[keyword] && index.aliases[keyword] === key))
+                    (keyword.toUpperCase() === key || (index.aliases[keyword] && index.aliases[keyword].includes(key)))
                 ) {
                     response.push(
                         ...Object.keys(index.objects).filter((x) => index.objects[x].metadata.department === key)
@@ -105,15 +121,40 @@ function searchSingle(keyword, numResults) {
             response.push(...Object.keys(index.objects).filter((x) => index.objects[x].metadata.department === key));
         }
     }
-    return [...new Set([...response])];
+    return [...new Set(response)];
 }
 
 // perform a search
 export default function search(query, numResults = 10, mask = []) {
     query = query.toLowerCase();
-    // match course code with space, remove the space if detected
-    if (query.match(/([a-z]+) (\d+[a-z]*)/)) {
-        query = query.replace(/([a-z]+) (\d+[a-z]*)/, '$1$2');
+    // if at least one course number-like object (CNLO) was matched, search only for course numbers
+    if (query.match(matchCourseNum)) {
+        query = query.replaceAll(matchCourseNum + 'g', '$<department>$<number>');
+        const courseNums = query.split(',').map((x) => x.replace(' ', ''));
+        // if only one CNLO was matched, just run a single query
+        if (courseNums.length === 1) {
+            return expandResponse(searchCourseNumber(courseNums[0]), numResults, mask);
+        }
+        // for every CNLO matched, make sure it is a fully-qualified course number (FQCN);
+        // that is, one that has a department or department alias and a number
+        // (cs161 is a FQCN, while the numeral 161 is not)
+        // if a bare numeral is found, assume that the last department or department alias applies
+        // to that numeral, and then normalized
+        // if all numbers given are bare numerals, then perform no normalization
+        let lastDept = courseNums[0].match(matchCourseNum).groups.department;
+        for (const i in courseNums) {
+            const currDept = courseNums[i].match(matchCourseNum).groups.department;
+            if (!currDept) {
+                courseNums[i] = courseNums[i].replace(matchCourseNum, `${lastDept}$<number>`);
+            } else if (currDept !== lastDept) {
+                lastDept = currDept;
+            }
+        }
+        return expandResponse(
+            [...new Set(courseNums.map((courseNum) => searchCourseNumber(courseNum)).flat())],
+            numResults,
+            mask
+        );
     }
     const keywords = query.split(' ');
     if (keywords.some((x) => x.length < 2)) {
@@ -121,12 +162,12 @@ export default function search(query, numResults = 10, mask = []) {
     }
     // if only one keyword was given, just run a single query
     if (keywords.length === 1) {
-        return expandResponse(searchSingle(query, numResults), numResults, mask);
+        return expandResponse(searchKeyword(keywords[0], numResults), numResults, mask);
     }
     // take the results of all queries and return their intersection
     return expandResponse(
         keywords
-            .map((keyword) => searchSingle(keyword, numResults))
+            .map((keyword) => searchKeyword(keyword, numResults))
             .reduce((array, response) => array.filter((x) => response.includes(x))),
         numResults,
         mask
