@@ -11,7 +11,7 @@ const types = {
 };
 
 // regex to match department and course number with space
-const matchCourseNum = /(?<department>([ &/a-z]{2}4?[ &/a-z]*)?)(?<space> ?)(?<number>[a-z]?\d+[a-z]{0,4})/;
+const matchCourseNum = /(?<department>([ &/a-z]{2}4?[ &/a-z]*)?)(?<space> ?)(?<number>[a-z]?\d{1,3}[a-z]{0,4})/;
 
 // regex to tokenize a course number into its prefix/numeral/suffix
 const tokenizeCourseNum = /(?<prefix>[A-Z]?)(?<numeral>\d{1,3})(?<suffix>[A-Z]{0,4})/;
