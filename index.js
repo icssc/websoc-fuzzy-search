@@ -130,7 +130,10 @@ export default function search(query, numResults = 10, mask = []) {
     // if at least one course number-like object (CNLO) was matched, search only for course numbers
     if (query.match(matchCourseNum)) {
         query = query.replaceAll(matchCourseNum + 'g', '$<department>$<number>');
-        const courseNums = query.split(',').map((x) => x.replace(' ', ''));
+        const courseNums = query
+            .split(',')
+            .map((x) => x.replace(' ', ''))
+            .filter((x) => x);
         // if only one CNLO was matched, just run a single query
         if (courseNums.length === 1) {
             return expandResponse(searchCourseNumber(courseNums[0]), numResults, mask);
