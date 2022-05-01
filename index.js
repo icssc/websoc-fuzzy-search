@@ -60,14 +60,11 @@ function lexOrd(a, b) {
 // search on a single course number, with or without department
 function searchCourseNumber(courseNum) {
     let response = [];
-    if (courseNum.match(/^\d+[a-z]*$/)) {
-        response.push(
-            ...Object.keys(index.objects).filter(
-                (x) => index.objects[x].metadata.number && index.objects[x].metadata.number.includes(courseNum)
-            )
-        );
-    } else if (courseNum.match(/^[a-z]+\d+[a-z]*$/)) {
-        courseNum = courseNum.replace(' ', '');
+    let matchGroups = courseNum.match(matchCourseNum).groups;
+    // first strip the space if any was matched
+    if (matchGroups.space) courseNum = courseNum.replace(matchCourseNum, '$<department>$<number>');
+    // next check if a department was matched
+    if (matchGroups.department) {
         for (const [alias, department] of Object.entries(index.aliases)) {
             for (const dept of department) {
                 courseNum = courseNum.replace(new RegExp(`^${alias}`), dept.toString());
@@ -75,6 +72,13 @@ function searchCourseNumber(courseNum) {
         }
         response.push(
             ...Object.keys(index.objects).filter((x) => x.includes(courseNum.replace(' ', '').toUpperCase()))
+        );
+        // if not then we're dealing with a bare course number without the department
+    } else {
+        response.push(
+            ...Object.keys(index.objects).filter(
+                (x) => index.objects[x].metadata.number && index.objects[x].metadata.number.includes(matchGroups.number)
+            )
         );
     }
     return [...new Set(response)];
