@@ -60,12 +60,15 @@ function lexOrd(a, b) {
 // search on a single course number, with or without department
 function searchCourseNumber(courseNum) {
     let response = [];
-    let matchGroups = courseNum.match(matchCourseNum).groups;
+    const matchGroups = courseNum.match(matchCourseNum).groups;
     // next check if a department was matched
     if (matchGroups.department) {
         for (const [alias, department] of Object.entries(index.aliases)) {
             for (const dept of department) {
-                courseNum = courseNum.replace(new RegExp(`^${alias}(?=[bcdehmnps]?)(?![ |sci]+)`), dept.toString());
+                courseNum = courseNum.replace(
+                    new RegExp(`^${alias}(?=[bcdehmnps]?\\d{1,3}[a-z]{0,4})`),
+                    dept.toString()
+                );
             }
         }
         response.push(
