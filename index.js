@@ -11,7 +11,10 @@ const types = {
 };
 
 // regex to match department and course number with space
-const matchCourseNum = /(?<department>([ &/a-z]{2}4?[ &/a-z]*)?)(?<space> ?)(?<number>[a-z]?\d{1,3}[a-z]{0,4})/;
+const matchCNWithSpace = /(?<department>([ &/4a-z]*)?)(?<space> +)(?<number>[a-z]?\d{1,3}[a-z]{0,4})/
+
+// regex to match department and course number without space
+const matchCNWithoutSpace = /(?<department>([ &/4a-z]*)?)(?<number>[a-z]?\d{1,3}[a-z]{0,4})/
 
 // regex to tokenize a course number into its prefix/numeral/suffix
 const tokenizeCourseNum = /(?<prefix>[A-Z]?)(?<numeral>\d{1,3})(?<suffix>[A-Z]{0,4})/;
@@ -60,21 +63,25 @@ function lexOrd(a, b) {
 // search on a single course number, with or without department
 function searchCourseNumber(courseNum) {
     let response = [];
-    if (courseNum.match(/^\d+[a-z]*$/)) {
-        response.push(
-            ...Object.keys(index.objects).filter(
-                (x) => index.objects[x].metadata.number && index.objects[x].metadata.number.includes(courseNum)
-            )
-        );
-    } else if (courseNum.match(/^[a-z]+\d+[a-z]*$/)) {
-        courseNum = courseNum.replace(' ', '');
+    let matchGroups = courseNum.match(matchCNWithoutSpace).groups;
+    // next check if a department was matched
+    if (matchGroups.department) {
+        console.log(courseNum)
         for (const [alias, department] of Object.entries(index.aliases)) {
             for (const dept of department) {
-                courseNum = courseNum.replace(new RegExp(`^${alias}`), dept.toString());
+                courseNum = courseNum.replace(new RegExp(`^${alias}(?! )`), dept.toString());
+                console.log(courseNum)
             }
         }
         response.push(
             ...Object.keys(index.objects).filter((x) => x.includes(courseNum.replace(' ', '').toUpperCase()))
+        );
+        // if not then we're dealing with a bare course number without the department
+    } else {
+        response.push(
+            ...Object.keys(index.objects).filter(
+                (x) => index.objects[x].metadata.number && index.objects[x].metadata.number.includes(matchGroups.number)
+            )
         );
     }
     return [...new Set(response)];
@@ -128,12 +135,12 @@ function searchKeyword(keyword, numResults) {
 export default function search(query, numResults = 10, mask = []) {
     query = query.toLowerCase();
     // if at least one course number-like object (CNLO) was matched, search only for course numbers
-    if (query.match(matchCourseNum)) {
-        query = query.replaceAll(matchCourseNum + 'g', '$<department>$<number>');
+    if (query.match(matchCNWithSpace)) {
         const courseNums = query
             .split(',')
-            .map((x) => x.replace(' ', ''))
+            .map((x) => x.replace(matchCNWithSpace, '$<department>$<number>'))
             .filter((x) => x);
+            console.log(courseNums);
         // if only one CNLO was matched, just run a single query
         if (courseNums.length === 1) {
             return expandResponse(searchCourseNumber(courseNums[0]), numResults, mask);
@@ -144,11 +151,11 @@ export default function search(query, numResults = 10, mask = []) {
         // if a bare numeral is found, assume that the last department or department alias applies
         // to that numeral, and then normalized
         // if all numbers given are bare numerals, then perform no normalization
-        let lastDept = courseNums[0].match(matchCourseNum).groups.department;
+        let lastDept = courseNums[0].match(matchCNWithSpace).groups.department;
         for (const i in courseNums) {
-            const currDept = courseNums[i].match(matchCourseNum).groups.department;
+            const currDept = courseNums[i].match(matchCNWithSpace).groups.department;
             if (!currDept) {
-                courseNums[i] = courseNums[i].replace(matchCourseNum, `${lastDept}$<number>`);
+                courseNums[i] = courseNums[i].replace(matchCNWithSpace, `${lastDept}$<number>`);
             } else if (currDept !== lastDept) {
                 lastDept = currDept;
             }
