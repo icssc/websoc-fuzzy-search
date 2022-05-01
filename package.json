@@ -1,6 +1,6 @@
 {
     "name": "websoc-fuzzy-search",
-    "version": "0.7.2",
+    "version": "0.7.3",
     "description": "Fuzzy search proof of concept using WebSOC data",
     "homepage": "https://github.com/icssc/websoc-fuzzy-search#readme",
     "bugs": {
