@@ -78,7 +78,9 @@ function searchCourseNumber(courseNum) {
     } else {
         response.push(
             ...Object.keys(index.objects).filter(
-                (x) => index.objects[x].metadata.number && index.objects[x].metadata.number.includes(matchGroups.number)
+                (x) =>
+                    index.objects[x].metadata.number &&
+                    index.objects[x].metadata.number.includes(matchGroups.number.toUpperCase())
             )
         );
     }
