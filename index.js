@@ -132,7 +132,7 @@ function searchKeyword(keyword, numResults) {
 }
 
 // perform a search
-export default function search(query, numResults = 10, mask = []) {
+export default function search(query, numResults = Number.MAX_SAFE_INTEGER, mask = []) {
     query = query.toLowerCase();
     // if at least one course number-like object (CNLO) was matched, search only for course numbers
     // match with the regex without space first since matches on all course numbers
