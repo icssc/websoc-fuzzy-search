@@ -167,9 +167,6 @@ export default function search(query, numResults = Number.MAX_SAFE_INTEGER, mask
         );
     }
     const keywords = query.split(' ');
-    if (keywords.some((x) => x.length < 2)) {
-        throw new TypeError('Each keyword of the query must be at least two characters long.');
-    }
     // if only one keyword was given, just run a single query
     if (keywords.length === 1) {
         return expandResponse(searchKeyword(keywords[0], numResults), numResults, mask);
