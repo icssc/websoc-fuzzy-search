@@ -10,6 +10,22 @@ const types = {
     INSTRUCTOR: 1,
 };
 
+// Roman numeral map
+// Stops at 8 because that's the highest Roman numeral encountered in the cache (as of 2022-04-08)
+const romans = {
+    i: '1',
+    ii: '2',
+    iii: '3',
+    iv: '4',
+    v: '5',
+    vi: '6',
+    vii: '7',
+    viii: '8',
+};
+
+// regex to match GE category
+const matchGECategory = /(?<ge>(?:ge)?)(?<hyphen>-?)(?<number>[1-8]|(?:iv|v?i{0,3}))(?<suffix>[ab]?)/;
+
 // regex to match department and/or course number without space
 const matchCourseNum = /(?<department>([ &/a-z]{1,2}4?[ &/a-z]*)?)(?<number>[a-z]?\d{1,3}[a-z]{0,4})/;
 
@@ -87,6 +103,16 @@ function searchCourseNumber(courseNum) {
     return [...new Set(response)];
 }
 
+// search on a single GE category
+function searchGECategory(geCategory) {
+    return [
+        geCategory,
+        ...Object.keys(index.objects).filter(
+            (x) => index.objects[x].metadata.geList && index.objects[x].metadata.geList.includes(geCategory)
+        ),
+    ];
+}
+
 // search on a single keyword
 function searchKeyword(keyword, numResults) {
     keyword = keyword.toLowerCase();
@@ -135,6 +161,21 @@ function searchKeyword(keyword, numResults) {
 export default function search(query, numResults, type) {
     query = query.toLowerCase();
     numResults = numResults ?? Number.MAX_SAFE_INTEGER;
+    // try matching GE categories first
+    if (query.match(matchGECategory).groups.number) {
+        const geCategories = query
+            .split(',')
+            .map((x) => x.replace(' ', '').replace(matchGECategory, `ge-$<number>$<suffix>`))
+            .filter((x) => x);
+        for (const i in geCategories) {
+            const num = geCategories[i].match(matchGECategory).groups.number;
+            geCategories[i] = geCategories[i].replace(num, romans[num] ?? num).toUpperCase();
+        }
+        if (geCategories.length === 1) {
+            return expandResponse(searchGECategory(geCategories[0]), numResults, type);
+        }
+        return expandResponse([...new Set(geCategories.map((x) => searchGECategory(x)).flat())], numResults, type);
+    }
     // if at least one course number-like object (CNLO) was matched, search only for course numbers
     // match with the regex without space first since matches on all course numbers
     if (query.match(matchCourseNum)) {
