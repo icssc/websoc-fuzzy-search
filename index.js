@@ -41,8 +41,8 @@ function compare(a, b) {
 }
 
 // given an array of keys, return a mapping of those keys to their results in index.objects
-function expandResponse(response, numResults, mask) {
-    response = mask.length ? response.filter((x) => !mask.includes(index.objects[x].type)) : response;
+function expandResponse(response, numResults, type) {
+    response = type ? response.filter((x) => type.includes(index.objects[x].type)) : response;
     return response
         .sort(compare)
         .slice(0, numResults - 1)
@@ -132,8 +132,9 @@ function searchKeyword(keyword, numResults) {
 }
 
 // perform a search
-export default function search(query, numResults = Number.MAX_SAFE_INTEGER, mask = []) {
+export default function search(query, numResults, type) {
     query = query.toLowerCase();
+    numResults = numResults ?? Number.MAX_SAFE_INTEGER;
     // if at least one course number-like object (CNLO) was matched, search only for course numbers
     // match with the regex without space first since matches on all course numbers
     if (query.match(matchCourseNum)) {
@@ -143,7 +144,7 @@ export default function search(query, numResults = Number.MAX_SAFE_INTEGER, mask
             .filter((x) => x);
         // if only one CNLO was matched, just run a single query
         if (courseNums.length === 1) {
-            return expandResponse(searchCourseNumber(courseNums[0]), numResults, mask);
+            return expandResponse(searchCourseNumber(courseNums[0]), numResults, type);
         }
         // for every CNLO matched, make sure it is a fully-qualified course number (FQCN);
         // that is, one that has a department or department alias and a number
@@ -163,13 +164,13 @@ export default function search(query, numResults = Number.MAX_SAFE_INTEGER, mask
         return expandResponse(
             [...new Set(courseNums.map((courseNum) => searchCourseNumber(courseNum)).flat())],
             numResults,
-            mask
+            type
         );
     }
     const keywords = query.split(' ');
     // if only one keyword was given, just run a single query
     if (keywords.length === 1) {
-        return expandResponse(searchKeyword(keywords[0], numResults), numResults, mask);
+        return expandResponse(searchKeyword(keywords[0], numResults), numResults, type);
     }
     // take the results of all queries and return their intersection
     return expandResponse(
@@ -177,6 +178,6 @@ export default function search(query, numResults = Number.MAX_SAFE_INTEGER, mask
             .map((keyword) => searchKeyword(keyword, numResults))
             .reduce((array, response) => array.filter((x) => response.includes(x))),
         numResults,
-        mask
+        type
     );
 }
