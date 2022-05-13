@@ -167,9 +167,9 @@ function searchKeyword(keyword, numResults) {
 
 // perform a search
 export default function search(params) {
-    let { query, numResults, resultType, filterOptions } = params ?? {};
+    let { query, numResults, resultType, filterOptions } = params ? params : {};
     query = query ? query.toLowerCase() : '';
-    numResults = numResults ?? Number.MAX_SAFE_INTEGER;
+    numResults = numResults ? numResults : Number.MAX_SAFE_INTEGER;
     // try matching GE categories first
     if (query.match(matchGECategory).groups.number) {
         const geCategories = query
@@ -178,7 +178,7 @@ export default function search(params) {
             .filter((x) => x);
         for (const i in geCategories) {
             const num = geCategories[i].match(matchGECategory).groups.number;
-            geCategories[i] = geCategories[i].replace(num, romans[num] ?? num).toUpperCase();
+            geCategories[i] = geCategories[i].replace(num, romans[num] ? romans[num] : num).toUpperCase();
         }
         if (geCategories.length === 1) {
             return expandResponse(searchGECategory(geCategories[0]), numResults, resultType, filterOptions);
