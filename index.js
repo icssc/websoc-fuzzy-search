@@ -57,8 +57,16 @@ function compare(a, b) {
 }
 
 // given an array of keys, return a mapping of those keys to their results in index.objects
-function expandResponse(response, numResults, type) {
-    response = type ? response.filter((x) => type.includes(index.objects[x].type)) : response;
+function expandResponse(response, numResults, resultTypes, filterOptions) {
+    response = resultTypes ? response.filter((x) => resultTypes.includes(index.objects[x].type)) : response;
+    if (filterOptions) {
+        for (const [k, v] of Object.entries(filterOptions)) {
+            if (!v.length) continue;
+            response = response.filter(
+                (x) => index.objects[x].metadata[k] && v.every((y) => index.objects[x].metadata[k].includes(y))
+            );
+        }
+    }
     return response
         .sort(compare)
         .slice(0, numResults - 1)
@@ -158,8 +166,9 @@ function searchKeyword(keyword, numResults) {
 }
 
 // perform a search
-export default function search(query, numResults, type) {
-    query = query.toLowerCase();
+export default function search(params) {
+    let { query, numResults, resultType, filterOptions } = params ?? {};
+    query = query ? query.toLowerCase() : '';
     numResults = numResults ?? Number.MAX_SAFE_INTEGER;
     // try matching GE categories first
     if (query.match(matchGECategory).groups.number) {
@@ -172,9 +181,14 @@ export default function search(query, numResults, type) {
             geCategories[i] = geCategories[i].replace(num, romans[num] ?? num).toUpperCase();
         }
         if (geCategories.length === 1) {
-            return expandResponse(searchGECategory(geCategories[0]), numResults, type);
+            return expandResponse(searchGECategory(geCategories[0]), numResults, resultType, filterOptions);
         }
-        return expandResponse([...new Set(geCategories.map((x) => searchGECategory(x)).flat())], numResults, type);
+        return expandResponse(
+            [...new Set(geCategories.map((x) => searchGECategory(x)).flat())],
+            numResults,
+            resultType,
+            filterOptions
+        );
     }
     // if at least one course number-like object (CNLO) was matched, search only for course numbers
     // match with the regex without space first since matches on all course numbers
@@ -185,7 +199,7 @@ export default function search(query, numResults, type) {
             .filter((x) => x);
         // if only one CNLO was matched, just run a single query
         if (courseNums.length === 1) {
-            return expandResponse(searchCourseNumber(courseNums[0]), numResults, type);
+            return expandResponse(searchCourseNumber(courseNums[0]), numResults, resultType, filterOptions);
         }
         // for every CNLO matched, make sure it is a fully-qualified course number (FQCN);
         // that is, one that has a department or department alias and a number
@@ -205,13 +219,14 @@ export default function search(query, numResults, type) {
         return expandResponse(
             [...new Set(courseNums.map((courseNum) => searchCourseNumber(courseNum)).flat())],
             numResults,
-            type
+            resultType,
+            filterOptions
         );
     }
     const keywords = query.split(' ');
     // if only one keyword was given, just run a single query
     if (keywords.length === 1) {
-        return expandResponse(searchKeyword(keywords[0], numResults), numResults, type);
+        return expandResponse(searchKeyword(keywords[0], numResults), numResults, resultType, filterOptions);
     }
     // take the results of all queries and return their intersection
     return expandResponse(
@@ -219,6 +234,7 @@ export default function search(query, numResults, type) {
             .map((keyword) => searchKeyword(keyword, numResults))
             .reduce((array, response) => array.filter((x) => response.includes(x))),
         numResults,
-        type
+        resultType,
+        filterOptions
     );
 }
