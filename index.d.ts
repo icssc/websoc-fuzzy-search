@@ -1,7 +1,8 @@
+declare type CourseLevel = 0 | 1 | 2;
 declare type Metadata = Record<string, string | string[]>;
 declare type ResultType = 'GE_CATEGORY' | 'DEPARTMENT' | 'COURSE' | 'INSTRUCTOR';
 declare interface FilterOptions {
-    readonly courseLevel?: number[];
+    readonly courseLevel?: CourseLevel[];
     readonly department?: string[];
     readonly geList?: string[];
     readonly school?: string[];
