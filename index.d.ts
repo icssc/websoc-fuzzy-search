@@ -1,10 +1,22 @@
-declare type ResultType = 'GE_CATEGORY' | 'DEPARTMENT' | 'COURSE' | 'INSTRUCTOR';
 declare type Metadata = Record<string, string | string[]>;
-declare interface SearchResult {
-    readonly type: ResultType,
-    readonly name: string,
-    readonly metadata: Metadata,
+declare type ResultType = 'GE_CATEGORY' | 'DEPARTMENT' | 'COURSE' | 'INSTRUCTOR';
+declare interface FilterOptions {
+    readonly courseLevel?: number[];
+    readonly department?: string[];
+    readonly geList?: string[];
+    readonly school?: string[];
 }
-declare function search(query: string, numResults?: number, mask?: ResultType[]): Record<string, SearchResult>;
+declare interface SearchParams {
+    readonly query?: string;
+    readonly numResults?: number;
+    readonly resultType?: ResultType;
+    readonly filterOptions?: FilterOptions;
+}
+declare interface SearchResult {
+    readonly type: ResultType;
+    readonly name: string;
+    readonly metadata: Metadata;
+}
+declare function search(params?: SearchParams): Record<string, SearchResult>;
 
 export default search;
