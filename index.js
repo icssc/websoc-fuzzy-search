@@ -181,14 +181,18 @@ export default function search(params) {
             geCategories[i] = geCategories[i].replace(num, romans[num] ? romans[num] : num).toUpperCase();
         }
         if (geCategories.length === 1) {
-            return expandResponse(searchGECategory(geCategories[0]), numResults, resultType, filterOptions);
+            // check whether the GE category actually exists; if only one entry was found, then it is invalid, because
+            // searchGECategory() returns all classes that fulfill that category in addition to the category itself
+            const response = searchGECategory(geCategories[0]);
+            if (response.length !== 1) return expandResponse(response, numResults, resultType, filterOptions);
+        } else {
+            return expandResponse(
+                [...new Set(geCategories.map((x) => searchGECategory(x)).flat())],
+                numResults,
+                resultType,
+                filterOptions
+            );
         }
-        return expandResponse(
-            [...new Set(geCategories.map((x) => searchGECategory(x)).flat())],
-            numResults,
-            resultType,
-            filterOptions
-        );
     }
     // if at least one course number-like object (CNLO) was matched, search only for course numbers
     // match with the regex without space first since matches on all course numbers
