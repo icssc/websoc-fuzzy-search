@@ -69,7 +69,7 @@ function expandResponse(response, numResults, resultTypes, filterOptions) {
     }
     return response
         .sort(compare)
-        .slice(0, numResults - 1)
+        .slice(0, numResults)
         .reduce((obj, key) => {
             obj[key] = index.objects[key];
             return obj;
