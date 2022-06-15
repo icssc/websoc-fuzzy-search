@@ -1,5 +1,5 @@
 // imports
-import { default as index } from './index.json';
+import { default as index } from './scripts/index.json';
 
 // constants
 // mapping of types to numbers for compare

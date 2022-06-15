@@ -11,7 +11,7 @@
     "files": [
         "index.d.ts",
         "index.js",
-        "index.json"
+        "scripts/index.json"
     ],
     "main": "index.js",
     "repository": {
