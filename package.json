@@ -9,9 +9,12 @@
     "license": "MIT",
     "author": "icssc.projects",
     "files": [
+        "constants.js",
+        "helpers.js",
         "index.d.ts",
         "index.js",
-        "scripts/index.json"
+        "regex.js",
+        "scripts/index.js"
     ],
     "main": "index.js",
     "repository": {
