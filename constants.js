@@ -18,3 +18,8 @@ export const romans = {
     vii: '7',
     viii: '8',
 };
+
+// field names
+export const fieldNames = ['type', 'name', 'metadata'];
+export const courseFieldNames = ['department', 'number', 'geList', 'courseLevel', 'school'];
+export const instructorFieldNames = ['ucinetid', 'school', 'department'];

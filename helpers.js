@@ -1,21 +1,21 @@
 // imports
-import { types } from "./constants.js";
-import { matchCourseNum, tokenizeCourseNum } from "./regex.js";
-import index from "./scripts/index.js";
+import { types, fieldNames, courseFieldNames, instructorFieldNames } from './constants.js';
+import { matchCourseNum, tokenizeCourseNum } from './regex.js';
+import index from './scripts/index.js';
 
 // comparation function for sorting responses
 function compare(a, b) {
     // compare object types in the order GE->department->course->instructor
-    let aType = index.objects[a].type;
-    let bType = index.objects[b].type;
+    let aType = index.objects[a][0];
+    let bType = index.objects[b][0];
     if (aType !== bType) return Math.sign(types[bType] - types[aType]);
     // special ordering for course numbers that checks in the order department->numeral->prefix->suffix
     if (aType === 'COURSE') {
-        const aDept = index.objects[a].metadata.department;
-        const bDept = index.objects[b].metadata.department;
+        const aDept = index.objects[a][2][0];
+        const bDept = index.objects[b][2][0];
         if (aDept === bDept) {
-            const [aPre, aNum, aSuf] = Object.values(index.objects[a].metadata.number.match(tokenizeCourseNum).groups);
-            const [bPre, bNum, bSuf] = Object.values(index.objects[b].metadata.number.match(tokenizeCourseNum).groups);
+            const [aPre, aNum, aSuf] = Object.values(index.objects[a][2][1].match(tokenizeCourseNum).groups);
+            const [bPre, bNum, bSuf] = Object.values(index.objects[b][2][1].match(tokenizeCourseNum).groups);
             if (aNum === bNum) {
                 return aPre === bPre ? lexOrd(aSuf, bSuf) : lexOrd(aPre, bPre);
             }
@@ -34,12 +34,12 @@ function lexOrd(a, b) {
 
 // given an array of keys, return a mapping of those keys to their results in index.objects
 export function expandResponse(response, numResults, resultTypes, filterOptions) {
-    response = resultTypes ? response.filter((x) => resultTypes.includes(index.objects[x].type)) : response;
+    response = resultTypes ? response.filter((x) => resultTypes.includes(index.objects[x][0])) : response;
     if (filterOptions) {
         for (const [k, v] of Object.entries(filterOptions)) {
             if (!v.length) continue;
             response = response.filter(
-                (x) => index.objects[x].metadata[k] && v.every((y) => index.objects[x].metadata[k].includes(y))
+                (x) => index.objects[x][2][k] && v.every((y) => index.objects[x][2][k].includes(y))
             );
         }
     }
@@ -47,7 +47,16 @@ export function expandResponse(response, numResults, resultTypes, filterOptions)
         .sort(compare)
         .slice(0, numResults)
         .reduce((obj, key) => {
-            obj[key] = index.objects[key];
+            obj[key] = index.objects[key].reduce((prev, curr, index) => {
+                prev[fieldNames[index]] = curr;
+                return prev;
+            }, {});
+            if (obj[key].type === 'COURSE' || obj[key].type === 'INSTRUCTOR') {
+                obj[key].metadata = obj[key].metadata.reduce((prev, curr, index) => {
+                    prev[(obj[key].type === 'COURSE' ? courseFieldNames : instructorFieldNames)[index]] = curr;
+                    return prev;
+                }, {});
+            }
             return obj;
         }, {});
 }
@@ -74,8 +83,8 @@ export function searchCourseNumber(courseNum) {
         response.push(
             ...Object.keys(index.objects).filter(
                 (x) =>
-                    index.objects[x].metadata.number &&
-                    index.objects[x].metadata.number.includes(matchGroups.number.toUpperCase())
+                    index.objects[x][0] === 'COURSE' &&
+                    index.objects[x][2][1].includes(matchGroups.number.toUpperCase())
             )
         );
     }
@@ -87,7 +96,7 @@ export function searchGECategory(geCategory) {
     return [
         geCategory,
         ...Object.keys(index.objects).filter(
-            (x) => index.objects[x].metadata.geList && index.objects[x].metadata.geList.includes(geCategory)
+            (x) => index.objects[x][2][2] && index.objects[x][2][2].includes(geCategory)
         ),
     ];
 }
@@ -112,12 +121,10 @@ export function searchKeyword(keyword, numResults) {
             for (const key of keyArrMap[kw]) {
                 // prioritize exact department matches
                 if (
-                    index.objects[key].type === 'DEPARTMENT' &&
+                    index.objects[key][0] === 'DEPARTMENT' &&
                     (keyword.toUpperCase() === key || (index.aliases[keyword] && index.aliases[keyword].includes(key)))
                 ) {
-                    response.push(
-                        ...Object.keys(index.objects).filter((x) => index.objects[x].metadata.department === key)
-                    );
+                    response.push(...Object.keys(index.objects).filter((x) => index.objects[x][2][0] === key));
                     exactDeptMatch = true;
                 }
             }
@@ -129,8 +136,8 @@ export function searchKeyword(keyword, numResults) {
     if (!exactDeptMatch) response.push(...Object.values(keyArrMap).flat());
     // if there are bare departments and not enough responses, add the courses from that department
     for (const key of response) {
-        if (index.objects[key].type === 'DEPARTMENT' && response.length <= numResults) {
-            response.push(...Object.keys(index.objects).filter((x) => index.objects[x].metadata.department === key));
+        if (index.objects[key][0] === 'DEPARTMENT' && response.length <= numResults) {
+            response.push(...Object.keys(index.objects).filter((x) => index.objects[x][2][0] === key));
         }
     }
     return [...new Set(response)];
