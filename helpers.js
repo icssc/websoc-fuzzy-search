@@ -96,7 +96,7 @@ export function searchGECategory(geCategory) {
     return [
         geCategory,
         ...Object.keys(index.objects).filter(
-            (x) => index.objects[x][2][2] && index.objects[x][2][2].includes(geCategory)
+            (x) => index.objects[x][2] && index.objects[x][2][2] && index.objects[x][2][2].includes(geCategory)
         ),
     ];
 }
@@ -124,7 +124,11 @@ export function searchKeyword(keyword, numResults) {
                     index.objects[key][0] === 'DEPARTMENT' &&
                     (keyword.toUpperCase() === key || (index.aliases[keyword] && index.aliases[keyword].includes(key)))
                 ) {
-                    response.push(...Object.keys(index.objects).filter((x) => index.objects[x][2][0] === key));
+                    response.push(
+                        ...Object.keys(index.objects).filter(
+                            (x) => index.objects[x][2] && index.objects[x][2][0] === key
+                        )
+                    );
                     exactDeptMatch = true;
                 }
             }
@@ -137,7 +141,9 @@ export function searchKeyword(keyword, numResults) {
     // if there are bare departments and not enough responses, add the courses from that department
     for (const key of response) {
         if (index.objects[key][0] === 'DEPARTMENT' && response.length <= numResults) {
-            response.push(...Object.keys(index.objects).filter((x) => index.objects[x][2][0] === key));
+            response.push(
+                ...Object.keys(index.objects).filter((x) => index.objects[x][2] && index.objects[x][2][0] === key)
+            );
         }
     }
     return [...new Set(response)];
