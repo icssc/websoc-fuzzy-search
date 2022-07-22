@@ -1,23 +1,4 @@
-declare type CourseLevel = 0 | 1 | 2;
-declare type Metadata = Record<string, string | string[]>;
-declare type ResultType = 'GE_CATEGORY' | 'DEPARTMENT' | 'COURSE' | 'INSTRUCTOR';
-declare interface FilterOptions {
-    readonly courseLevel?: CourseLevel[];
-    readonly department?: string[];
-    readonly geList?: string[];
-    readonly school?: string[];
-}
-declare interface SearchParams {
-    readonly query?: string;
-    readonly numResults?: number;
-    readonly resultType?: ResultType;
-    readonly filterOptions?: FilterOptions;
-}
-declare interface SearchResult {
-    readonly type: ResultType;
-    readonly name: string;
-    readonly metadata: Metadata;
-}
-declare function search(params?: SearchParams): Record<string, SearchResult>;
+import { SearchParams, SearchResult } from './types';
 
-export default search;
+export default function search(params?: SearchParams): Record<string, SearchResult>;
+export * from './types';
